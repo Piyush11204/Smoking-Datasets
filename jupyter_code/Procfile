@@ -1,0 +1,2 @@
+web: gunicorn smoking1:app
+
