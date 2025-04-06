@@ -13,6 +13,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc, f1_score
 from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline
+
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -107,10 +109,10 @@ class SmokingCessationAdvisor:
             print("Training advanced ensemble model...")
             
             # Handle class imbalance with SMOTE
-            print("Applying SMOTE to balance classes...")
-            X_train_transformed = preprocessor.fit_transform(X_train)
-            smote = SMOTE(random_state=42)
-            X_train_resampled, y_train_resampled = smote.fit_resample(X_train_transformed, y_train)
+            # print("Applying SMOTE to balance classes...")
+            # X_train_transformed = preprocessor.fit_transform(X_train)
+            # smote = SMOTE(random_state=42)
+            # X_train_resampled, y_train_resampled = smote.fit_resample(X_train_transformed, y_train)
             
             # Create ensemble of models
             estimators = [
@@ -130,7 +132,9 @@ class SmokingCessationAdvisor:
             
             # Fit model
             print("Fitting ensemble model...")
-            self.model.fit(X_train, y_train_resampled)
+            #self.model.fit(X_train, y_train_resampled)
+            self.model.fit(X_train, y_train)  # ✅ Correct when using pipeline with SMOTE inside
+
             
             # Get feature names and importances (using RandomForest component)
             X_processed = preprocessor.fit_transform(X)
@@ -150,6 +154,7 @@ class SmokingCessationAdvisor:
             # Basic model
             self.model = Pipeline(steps=[
                 ('preprocessor', preprocessor),
+                ('smote', SMOTE(random_state=42)), 
                 ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
             ])
             
@@ -652,3 +657,12 @@ if __name__ == "__main__":
     
     # Run the interactive advisor
     advisor.run_interactive_advisor()
+
+    advisor = SmokingCessationAdvisor()
+advisor.load_data()
+trained_model = advisor.train_model(advanced=True, save=True)
+
+# Optionally, save it again manually
+if trained_model is not None:
+    joblib.dump(trained_model, "smoking_cessation_model.pkl")
+    print("Model saved again manually.")
