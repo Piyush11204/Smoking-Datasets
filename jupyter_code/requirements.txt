@@ -6,4 +6,4 @@ pandas
 matplotlib
 joblib
 seaborn
-imblearn
+imbalanced-learn
