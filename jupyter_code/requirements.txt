@@ -4,3 +4,5 @@ scikit-learn
 gunicorn
 pandas
 matplotlib
+joblib
+seaborn
