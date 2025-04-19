@@ -7,4 +7,4 @@ matplotlib
 seaborn
 imbalanced-learn
 gunicorn
-fpdf2>=2.4.0
+fpdf2==2.7.6 

@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from datetime import datetime
 import io
-from fpdf import FPDF2 as FPDF
+from fpdf import FPDF
 import traceback
 from smoking1 import SmokingCessationAdvisor  # Import the SmokingCessationAdvisor class
 
