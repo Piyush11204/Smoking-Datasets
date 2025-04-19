@@ -1,25 +1,25 @@
 ====================================================
      COMPREHENSIVE SMOKING CESSATION PLAN
 ====================================================
-Generated on: April 06, 2025
+Generated on: April 19, 2025
 
 === YOUR PROFILE ===
-Age: 35
-Gender: Female
-Smoking Duration: 12 years
-Cigarettes per day: 11
-Nicotine Dependence: 7/10
+Age: 45
+Gender: Male
+Smoking Duration: 10 years
+Cigarettes per day: 12
+Nicotine Dependence: 8/10
 Previous Quit Attempts: 4
-Stress Level: Medium
-Physical Activity: Moderate
+Stress Level: High
+Physical Activity: Sedentary
 Support System: Family & Friends
 
 === YOUR QUIT SUCCESS PROBABILITY ===
-Estimated probability of successfully quitting: 0.0%
+Estimated probability of successfully quitting: 50.0%
 
-Quitting may be challenging based on your profile, but it's absolutely possible with the
-right support and strategies. Many people with similar profiles have successfully quit.
-Pay special attention to the critical recommendations below.
+You have a good chance of quitting smoking. Your profile includes several positive factors
+that can help you succeed. Be sure to prepare thoroughly and utilize the recommended strategies
+to maximize your chances of success. Consistency will be important in your quit journey.
 
 === YOUR PERSONALIZED RECOMMENDATIONS ===
 
@@ -29,7 +29,16 @@ Pay special attention to the critical recommendations below.
 
 
 --- RECOMMENDED STRATEGIES ---
-1. Analyze what triggered relapse in your previous quit attempts and develop specific strategies to address those situations.
+1. Your high stress levels may make quitting more difficult. Consider stress-management techniques such as meditation, exercise, or counseling.
+   Why: Stress is a common trigger for smoking and a major cause of relapse.
+
+2. Develop a personalized craving management plan. Identify your triggers and have specific strategies ready for when cravings hit.
+   Why: The ability to manage cravings effectively is strongly associated with quit success.
+
+3. Increasing your physical activity can help manage cravings and improve mood. Consider starting with short daily walks.
+   Why: Exercise reduces cravings and withdrawal symptoms while boosting mood naturally.
+
+4. Analyze what triggered relapse in your previous quit attempts and develop specific strategies to address those situations.
    Why: Each quit attempt provides valuable information for future success. Most successful quitters tried multiple times before succeeding.
 
 
@@ -47,14 +56,14 @@ Pay special attention to the critical recommendations below.
    Why: Positive reinforcement helps maintain motivation during the quit process.
 
 
-=== YOUR 7-DAY QUIT PLAN ===
+=== YOUR PERSONALIZED QUIT PLAN ===
 Day 1-2: Preparation
 • Set your quit date
 • Remove all cigarettes, lighters, and ashtrays from your environment
 • Tell friends and family about your plan to quit
 
 Day 3-4: Quit Day and Early Coping
-• Use nicotine replacement if prescribed
+• Use nicotine replacement if chosen
 • Practice the 4Ds when cravings hit
 • Stay busy with activities you enjoy
 
@@ -67,7 +76,6 @@ Day 5-7: Building Momentum
 • National Quitline: 1-800-QUIT-NOW (1-800-784-8669)
 • SmokeFree.gov: https://smokefree.gov
 • American Lung Association: https://www.lung.org/quit-smoking
-• CDC Tips From Former Smokers: https://www.cdc.gov/tobacco/campaign/tips/
 
 === HANDLING COMMON CHALLENGES ===
 • Intense Cravings: Practice deep breathing, use the 4Ds, call a support person

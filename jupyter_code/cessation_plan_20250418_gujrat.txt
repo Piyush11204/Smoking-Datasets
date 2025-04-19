@@ -1,21 +1,21 @@
 ====================================================
      COMPREHENSIVE SMOKING CESSATION PLAN
 ====================================================
-Generated on: April 06, 2025
+Generated on: April 18, 2025
 
 === YOUR PROFILE ===
 Age: 34
-Gender: Male
-Smoking Duration: 8 years
-Cigarettes per day: 10
+Gender: Female
+Smoking Duration: 1 years
+Cigarettes per day: 5
 Nicotine Dependence: 5/10
-Previous Quit Attempts: 2
+Previous Quit Attempts: 0
 Stress Level: Medium
 Physical Activity: Moderate
-Support System: Nonr
+Support System: Family & friends
 
 === YOUR QUIT SUCCESS PROBABILITY ===
-Estimated probability of successfully quitting: 6.4%
+Estimated probability of successfully quitting: 6.3%
 
 Quitting may be challenging based on your profile, but it's absolutely possible with the
 right support and strategies. Many people with similar profiles have successfully quit.

@@ -1,11 +1,12 @@
-# In app.py, updated to generate and return PDF reports:
+# In app.py, improved version with better error handling:
 import joblib
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, Response
 import pandas as pd
 import os
 from datetime import datetime
 import io
 from fpdf import FPDF
+import traceback
 from smoking1 import SmokingCessationAdvisor  # Import the SmokingCessationAdvisor class
 
 # Initialize the advisor
@@ -21,7 +22,9 @@ def home():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        app.logger.info("Received prediction request")
         data = request.get_json(force=True)
+        app.logger.info(f"Request data: {data}")
         
         # Create user profile from input data
         user_profile = {
@@ -43,13 +46,17 @@ def predict():
 
         # Check if report generation is requested
         generate_report = data.get('generate_report', False)
+        app.logger.info(f"Generate report? {generate_report}")
         
         if not generate_report:
             # Original behavior: just return prediction
             prediction = advisor.predict_quit_success(user_profile)
-            return jsonify({'prediction': int(prediction > 0.5)})
+            prediction_value = int(prediction > 0.5)
+            app.logger.info(f"Returning prediction: {prediction_value} (probability: {prediction:.4f})")
+            return jsonify({'prediction': prediction_value, 'probability': float(prediction)})
         
         # Otherwise, generate PDF report
+        app.logger.info("Generating PDF report")
         # Get recommendations
         recommendations = advisor.get_recommendations(user_profile)
         
@@ -58,16 +65,21 @@ def predict():
         
         # Convert report to PDF
         pdf_file = create_pdf_report(report_text, user_profile)
+        app.logger.info("PDF report created successfully")
         
+        filename = f"smoking_cessation_report_{datetime.now().strftime('%Y%m%d')}.pdf"
         return send_file(
             pdf_file,
             mimetype='application/pdf',
             as_attachment=True,
-            download_name=f"smoking_cessation_report_{datetime.now().strftime('%Y%m%d')}.pdf"
+            download_name=filename
         )
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Error in prediction: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+
 def create_pdf_report(report_text, user_profile):
     """Convert text report to PDF"""
     pdf = FPDF()
@@ -123,7 +135,9 @@ def create_pdf_report(report_text, user_profile):
 def generate_report_only():
     """Generate report without saving to disk"""
     try:
+        app.logger.info("Received report generation request")
         data = request.get_json(force=True)
+        app.logger.info(f"Report request data: {data}")
         
         # Same user profile creation as in predict
         user_profile = {
@@ -148,25 +162,68 @@ def generate_report_only():
         
         # Generate report based on type
         report_type = data.get('report_type', 'comprehensive')
+        app.logger.info(f"Generating {report_type} report")
         report_text = advisor.generate_report(user_profile, recommendations, report_type)
         
         # Return as JSON if client prefers
         if data.get('format', 'pdf') == 'json':
-            return jsonify({'report': report_text, 
-                          'success_probability': advisor.predict_quit_success(user_profile)})
+            prediction = advisor.predict_quit_success(user_profile)
+            app.logger.info("Returning JSON report")
+            return jsonify({
+                'report': report_text, 
+                'success_probability': float(prediction)
+            })
         
         # Otherwise return as PDF
+        app.logger.info("Creating PDF for report")
         pdf_file = create_pdf_report(report_text, user_profile)
+        app.logger.info("PDF created successfully")
         
+        filename = f"smoking_cessation_report_{datetime.now().strftime('%Y%m%d')}.pdf"
         return send_file(
             pdf_file,
             mimetype='application/pdf',
             as_attachment=True,
-            download_name=f"smoking_cessation_report_{datetime.now().strftime('%Y%m%d')}.pdf"
+            download_name=filename
         )
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Error in report generation: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+
+# Add a dedicated endpoint just for testing PDF generation
+@app.route('/test-pdf', methods=['GET'])
+def test_pdf():
+    """Test endpoint that always returns a simple PDF"""
+    try:
+        app.logger.info("Testing PDF generation")
+        
+        # Create a simple PDF
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=12)
+        pdf.cell(200, 10, txt="This is a test PDF from the Smoking Cessation API", ln=True)
+        pdf.cell(200, 10, txt=f"Generated at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", ln=True)
+        
+        # Output to memory
+        pdf_buffer = io.BytesIO()
+        pdf.output(pdf_buffer)
+        pdf_buffer.seek(0)
+        
+        app.logger.info("Test PDF created successfully")
+        
+        # Return the PDF
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f"test_pdf_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        )
+    except Exception as e:
+        app.logger.error(f"Error in PDF test: {str(e)}")
+        app.logger.error(traceback.format_exc())
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,26 +1,32 @@
 ====================================================
      COMPREHENSIVE SMOKING CESSATION PLAN
 ====================================================
-Generated on: April 06, 2025
+Generated on: April 19, 2025
 
 === YOUR PROFILE ===
-Age: 25
-Gender: Female
-Smoking Duration: 3 years
-Cigarettes per day: 4
-Nicotine Dependence: 3/10
+Age: 24
+Gender: Male
+Smoking Duration: 2 years
+Cigarettes per day: 6
+Nicotine Dependence: 5/10
 Previous Quit Attempts: 1
 Stress Level: Medium
-Physical Activity: Moderate
-Support System: Famliy & Friends
+Physical Activity: Active
+Support System: Family & Friends
 
 === YOUR QUIT SUCCESS PROBABILITY ===
-Estimated probability of successfully quitting: 74.0%
+Estimated probability of successfully quitting: 50.0%
 
-You have a good chance of successfully quitting smoking! With your profile, many people
-are able to quit successfully. The recommendations below will help you maximize your chances.
+You have a good chance of quitting smoking. Your profile includes several positive factors
+that can help you succeed. Be sure to prepare thoroughly and utilize the recommended strategies
+to maximize your chances of success. Consistency will be important in your quit journey.
 
 === YOUR PERSONALIZED RECOMMENDATIONS ===
+
+--- RECOMMENDED STRATEGIES ---
+1. As a younger smoker, focus on the immediate benefits like improved fitness, better skin, and saving money to stay motivated.
+   Why: Younger smokers are often more motivated by immediate benefits than long-term health concerns.
+
 
 --- GENERAL RECOMMENDATIONS ---
 1. Set a quit date within the next two weeks and remove all smoking products from your environment.
@@ -36,14 +42,14 @@ are able to quit successfully. The recommendations below will help you maximize 
    Why: Positive reinforcement helps maintain motivation during the quit process.
 
 
-=== YOUR 7-DAY QUIT PLAN ===
+=== YOUR PERSONALIZED QUIT PLAN ===
 Day 1-2: Preparation
 • Set your quit date
 • Remove all cigarettes, lighters, and ashtrays from your environment
 • Tell friends and family about your plan to quit
 
 Day 3-4: Quit Day and Early Coping
-• Use nicotine replacement if prescribed
+• Use nicotine replacement if chosen
 • Practice the 4Ds when cravings hit
 • Stay busy with activities you enjoy
 
@@ -56,7 +62,6 @@ Day 5-7: Building Momentum
 • National Quitline: 1-800-QUIT-NOW (1-800-784-8669)
 • SmokeFree.gov: https://smokefree.gov
 • American Lung Association: https://www.lung.org/quit-smoking
-• CDC Tips From Former Smokers: https://www.cdc.gov/tobacco/campaign/tips/
 
 === HANDLING COMMON CHALLENGES ===
 • Intense Cravings: Practice deep breathing, use the 4Ds, call a support person
