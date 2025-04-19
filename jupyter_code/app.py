@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from datetime import datetime
 import io
-from fpdf import FPDF
+from fpdf import FPDF2 as FPDF
 import traceback
 from smoking1 import SmokingCessationAdvisor  # Import the SmokingCessationAdvisor class
 
@@ -128,7 +128,10 @@ def create_pdf_report(report_text, user_profile):
     
     # Create in-memory file object
     pdf_buffer = io.BytesIO()
-    pdf.output(pdf_buffer)
+    # Fix: Use pdf.output() with destination parameter 'S' to get PDF as bytes
+    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+    # Write the bytes to the BytesIO object
+    pdf_buffer.write(pdf_bytes)
     pdf_buffer.seek(0)
     
     return pdf_buffer

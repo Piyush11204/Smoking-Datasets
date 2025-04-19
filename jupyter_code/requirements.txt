@@ -1,10 +1,10 @@
 flask
-numpy
-scikit-learn
-gunicorn
 pandas
-matplotlib
+scikit-learn
 joblib
+numpy
+matplotlib
 seaborn
 imbalanced-learn
-fpdf
+gunicorn
+fpdf2>=2.4.0
