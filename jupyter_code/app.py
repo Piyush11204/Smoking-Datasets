@@ -129,7 +129,7 @@ def create_pdf_report(report_text, user_profile):
     # Create in-memory file object
     pdf_buffer = io.BytesIO()
     # Fix: Use pdf.output() with destination parameter 'S' to get PDF as bytes
-    pdf_bytes = pdf.output(dest='S').encode('latin-1')
+    pdf_bytes = pdf.output(dest='S')
     # Write the bytes to the BytesIO object
     pdf_buffer.write(pdf_bytes)
     pdf_buffer.seek(0)
