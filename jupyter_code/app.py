@@ -82,6 +82,8 @@ def predict():
 
 def create_pdf_report(report_text, user_profile):
     """Convert text report to PDF"""
+    # Replace Unicode bullet points with compatible characters
+    report_text = report_text.replace('•', '-')
     pdf = FPDF()
     pdf.add_page()
     
