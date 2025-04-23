@@ -8,3 +8,4 @@ seaborn
 imbalanced-learn
 gunicorn
 fpdf2==2.7.6 
+reportlab
