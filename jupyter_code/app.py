@@ -84,24 +84,25 @@ def predict():
 
 
 def create_pdf_report(report_text, user_profile):
-    """Convert text report to PDF with improved formatting"""
+    """Convert text report to PDF with improved formatting and text wrapping"""
     # Replace Unicode bullet points with compatible characters
     report_text = report_text.replace('•', '-')
     
     pdf = FPDF()
+    # Set left and right margins to ensure text doesn't get cut off
+    pdf.set_left_margin(15)
+    pdf.set_right_margin(15)
     pdf.add_page()
     
     # Set up fonts
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(190, 10, "Smoking Cessation Report", 0, 1, 'C')
+    pdf.cell(180, 10, "Smoking Cessation Report", 0, 1, 'C')
     
     # Add date
     pdf.set_font("Arial", '', 12)
-    pdf.cell(190, 10, f"Generated on: {datetime.now().strftime('%B %d, %Y')}", 0, 1, 'R')
+    pdf.cell(180, 10, f"Generated on: {datetime.now().strftime('%B %d, %Y')}", 0, 1, 'R')
     
     # Add report content with improved formatting
-    current_section = None
-    
     # Split the report text into sections and process
     sections = report_text.split('===')
     
@@ -116,7 +117,9 @@ def create_pdf_report(report_text, user_profile):
             section_title = lines[0].strip()
             pdf.set_font("Arial", 'B', 14)
             pdf.ln(5)
-            pdf.cell(190, 8, section_title.upper(), 0, 1, 'L')
+            # Draw a light gray background for section headers
+            pdf.set_fill_color(240, 240, 240)
+            pdf.cell(180, 8, section_title.upper(), 0, 1, 'L', True)
             pdf.ln(2)
             
             # Process content after the heading
@@ -134,32 +137,39 @@ def create_pdf_report(report_text, user_profile):
                     subsection = line.replace('-', '').strip()
                     pdf.set_font("Arial", 'B', 12)
                     pdf.ln(3)
-                    pdf.cell(190, 6, subsection, 0, 1, 'L')
+                    pdf.cell(180, 6, subsection, 0, 1, 'L')
                     pdf.set_font("Arial", '', 10)
                     continue
                 
                 # Handle numbered points (like "1. Something")
                 if re.match(r'^\d+\.', line):
-                    pdf.set_font("Arial", 'B', 10)
-                    num_part = line.split('.')[0] + '.'
-                    text_part = '.'.join(line.split('.')[1:]).strip()
-                    
-                    pdf.cell(10, 6, num_part, 0, 0)
-                    pdf.set_font("Arial", '', 10)
-                    pdf.multi_cell(180, 6, text_part)
+                    parts = line.split('.', 1)
+                    if len(parts) == 2:
+                        pdf.set_font("Arial", 'B', 10)
+                        num_part = parts[0] + '.'
+                        text_part = parts[1].strip()
+                        
+                        # Add number with fixed width
+                        pdf.cell(8, 6, num_part, 0, 0)
+                        pdf.set_font("Arial", '', 10)
+                        # Use correct width calculation for the remaining text
+                        pdf.multi_cell(172, 6, text_part)
+                    else:
+                        # Fallback if splitting fails
+                        pdf.multi_cell(180, 6, line)
                     continue
                     
                 # Handle bullet points
                 if line.startswith('-') or line.startswith('•'):
-                    pdf.cell(10, 6, '-', 0, 0)
-                    pdf.multi_cell(180, 6, line[1:].strip())
+                    pdf.cell(8, 6, '-', 0, 0)
+                    pdf.multi_cell(172, 6, line[1:].strip())
                     continue
                     
                 # Handle "Why:" lines
                 if line.startswith('Why:'):
                     pdf.cell(15, 6, 'Why:', 0, 0)
                     pdf.set_font("Arial", 'I', 10)  # Italics for the explanation
-                    pdf.multi_cell(175, 6, line[4:].strip())
+                    pdf.multi_cell(165, 6, line[4:].strip())
                     pdf.set_font("Arial", '', 10)  # Back to normal font
                     continue
                     
@@ -171,16 +181,18 @@ def create_pdf_report(report_text, user_profile):
                         pdf.set_font("Arial", 'B', 10)
                         pdf.cell(60, 6, key + ':', 0, 0)
                         pdf.set_font("Arial", '', 10)
-                        pdf.multi_cell(130, 6, value.strip())
+                        pdf.multi_cell(120, 6, value.strip())
                         continue
                 
-                # Default handling for regular text
-                pdf.multi_cell(190, 6, line)
+                # Default handling for regular text with proper width to prevent truncation
+                pdf.multi_cell(180, 6, line)
     
     # Create in-memory file object
     pdf_buffer = io.BytesIO()
+    
     # Fix: Use pdf.output() with destination parameter 'S' to get PDF as bytes
-    pdf_bytes = pdf.output(dest='S')
+    pdf_bytes = pdf.output(dest='S').encode('latin1')  # Explicit encoding to avoid issues
+    
     # Write the bytes to the BytesIO object
     pdf_buffer.write(pdf_bytes)
     pdf_buffer.seek(0)
