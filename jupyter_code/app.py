@@ -89,9 +89,10 @@ def create_pdf_report(report_text, user_profile):
     report_text = report_text.replace('•', '-')
     
     pdf = FPDF()
-    # Set left and right margins to ensure text doesn't get cut off
+    # Set page size and margins
     pdf.set_left_margin(15)
     pdf.set_right_margin(15)
+    pdf.set_auto_page_break(True, margin=15)  # Enable auto page break
     pdf.add_page()
     
     # Set up fonts
@@ -112,44 +113,73 @@ def create_pdf_report(report_text, user_profile):
             
         # Process section title and content
         lines = section.strip().split('\n')
-        if lines:
-            # Section heading
-            section_title = lines[0].strip()
-            pdf.set_font("Arial", 'B', 14)
-            pdf.ln(5)
-            # Draw a light gray background for section headers
-            pdf.set_fill_color(240, 240, 240)
-            pdf.cell(180, 8, section_title.upper(), 0, 1, 'L', True)
-            pdf.ln(2)
+        if not lines:
+            continue
             
-            # Process content after the heading
-            pdf.set_font("Arial", '', 10)
-            content_lines = lines[1:] if len(lines) > 1 else []
-            
-            # For profile section, handle key-value pairs differently
-            if "YOUR PROFILE" in section_title.upper():
-                for line in content_lines:
-                    line = line.strip()
-                    if not line:
-                        pdf.ln(2)
-                        continue
-                    
-                    # Handle profile items (key: value)
-                    if ':' in line:
-                        parts = line.split(':', 1)
-                        if len(parts) == 2:
-                            key, value = parts[0].strip(), parts[1].strip()
-                            pdf.set_font("Arial", 'B', 10)
-                            pdf.cell(40, 6, key + ':', 0, 1)  # Force new line after key
-                            pdf.set_font("Arial", '', 10)
-                            pdf.cell(10, 0, "", 0, 0)  # Indent
-                            pdf.multi_cell(170, 6, value)
-                            pdf.ln(1)  # Space between items
-                        else:
-                            pdf.multi_cell(180, 6, line)
+        # Section heading
+        section_title = lines[0].strip()
+        pdf.set_font("Arial", 'B', 14)
+        pdf.ln(5)
+        # Draw a light gray background for section headers
+        pdf.set_fill_color(240, 240, 240)
+        pdf.cell(180, 8, section_title.upper(), 0, 1, 'L', True)
+        pdf.ln(2)
+        
+        # Process content after the heading
+        pdf.set_font("Arial", '', 10)
+        content_lines = lines[1:] if len(lines) > 1 else []
+        
+        # Handle different section types
+        section_name = section_title.upper()
+        
+        # For profile section, handle one item per line
+        if "YOUR PROFILE" in section_name:
+            for line in content_lines:
+                line = line.strip()
+                if not line:
+                    pdf.ln(2)
+                    continue
+                
+                # Handle profile items (key: value)
+                if ':' in line:
+                    parts = line.split(':', 1)
+                    if len(parts) == 2:
+                        key, value = parts[0].strip(), parts[1].strip()
+                        pdf.set_font("Arial", 'B', 10)
+                        # Key on its own line
+                        pdf.cell(180, 6, key + ':', 0, 1)
+                        # Value indented on next line
+                        pdf.set_font("Arial", '', 10)
+                        pdf.cell(10, 6, "", 0, 0)  # Indent
+                        pdf.multi_cell(170, 6, value)
+                        pdf.ln(1)  # Extra space between items
                     else:
                         pdf.multi_cell(180, 6, line)
-                continue
+                else:
+                    pdf.multi_cell(180, 6, line)
+        
+        # For success probability section
+        elif "YOUR QUIT SUCCESS PROBABILITY" in section_name:
+            for line in content_lines:
+                line = line.strip()
+                if not line:
+                    pdf.ln(2)
+                    continue
+                    
+                # Handle probability line specifically
+                if line.startswith("Estimated probability"):
+                    pdf.set_font("Arial", 'B', 12)
+                    pdf.multi_cell(180, 6, line)
+                    pdf.ln(2)
+                    pdf.set_font("Arial", '', 10)
+                else:
+                    # Regular text with proper wrapping
+                    pdf.multi_cell(180, 6, line)
+                    pdf.ln(2)
+                    
+        # For all other sections
+        else:
+            current_subsection = ""
             
             for line in content_lines:
                 line = line.strip()
@@ -159,11 +189,12 @@ def create_pdf_report(report_text, user_profile):
                     
                 # Handle subsection titles (marked with ---)
                 if line.startswith('---'):
-                    subsection = line.replace('-', '').strip()
+                    current_subsection = line.replace('-', '').strip()
                     pdf.set_font("Arial", 'B', 12)
                     pdf.ln(3)
-                    pdf.cell(180, 6, subsection, 0, 1, 'L')
+                    pdf.cell(180, 6, current_subsection, 0, 1, 'L')
                     pdf.set_font("Arial", '', 10)
+                    pdf.ln(1)
                     continue
                 
                 # Handle numbered points (like "1. Something")
@@ -179,56 +210,55 @@ def create_pdf_report(report_text, user_profile):
                         pdf.set_font("Arial", '', 10)
                         # Use multi_cell to ensure proper wrapping
                         pdf.multi_cell(172, 6, text_part)
+                        pdf.ln(1)
                     else:
                         # Fallback if splitting fails
                         pdf.multi_cell(180, 6, line)
+                        pdf.ln(1)
                     continue
                     
                 # Handle bullet points
                 if line.startswith('-') or line.startswith('•'):
                     pdf.cell(8, 6, '-', 0, 0)
                     pdf.multi_cell(172, 6, line[1:].strip())
+                    pdf.ln(1)
                     continue
                     
-                # Handle "Why:" lines with proper indentation and text wrapping
+                # Handle "Why:" lines with proper indentation
                 if line.startswith('Why:'):
                     pdf.cell(15, 6, 'Why:', 0, 0)
                     pdf.set_font("Arial", 'I', 10)  # Italics for the explanation
                     pdf.multi_cell(165, 6, line[4:].strip())
                     pdf.set_font("Arial", '', 10)  # Back to normal font
+                    pdf.ln(1)
                     continue
                 
-                # Handle lines with colons separately for better formatting, but only if they're shorter lines
-                if ':' in line and len(line) < 50:
-                    parts = line.split(':', 1)
-                    if len(parts) == 2:
-                        key, value = parts[0].strip(), parts[1].strip()
-                        pdf.set_font("Arial", 'B', 10)
-                        pdf.cell(60, 6, key + ':', 0, 1)  # Force new line after the key
-                        pdf.set_font("Arial", '', 10)
-                        pdf.cell(10, 0, "", 0, 0)  # Indent
-                        pdf.multi_cell(170, 6, value)
-                        continue
-                
-                # Default handling for regular text
-                # Make sure we use multi_cell to handle text wrapping properly
-                pdf.multi_cell(180, 6, line)
-                
-                # Add a tiny bit of space after each paragraph
-                if len(line) > 30:  # Only for longer paragraphs
+                # Handle section headers that might be in ALL CAPS
+                if line.upper() == line and len(line) > 10:
+                    pdf.set_font("Arial", 'B', 11)
+                    pdf.multi_cell(180, 6, line)
+                    pdf.set_font("Arial", '', 10)
                     pdf.ln(1)
+                    continue
+                    
+                # Default handling for regular text
+                pdf.multi_cell(180, 6, line)
+                pdf.ln(1)  # Add space after paragraphs
     
     # Create in-memory file object
     pdf_buffer = io.BytesIO()
     
-    # Fix: Handle different versions of FPDF - some return bytes, some return bytearray
-    pdf_bytes = pdf.output(dest='S')
-    if not isinstance(pdf_bytes, bytes):
-        pdf_bytes = bytes(pdf_bytes)
+    # Different FPDF versions handle output differently
+    try:
+        pdf_bytes = pdf.output(dest='S')
+        if not isinstance(pdf_bytes, bytes):
+            pdf_bytes = bytes(pdf_bytes)
+        pdf_buffer.write(pdf_bytes)
+    except TypeError:
+        # For newer FPDF versions
+        pdf_buffer = io.BytesIO(pdf.output(dest='S').encode('latin-1'))
     
-    pdf_buffer.write(pdf_bytes)
     pdf_buffer.seek(0)
-    
     return pdf_buffer
 
 @app.route('/report', methods=['POST'])
