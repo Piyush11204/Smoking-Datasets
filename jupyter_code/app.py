@@ -81,50 +81,98 @@ def predict():
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 def create_pdf_report(report_text, user_profile):
-    """Convert text report to PDF"""
+    """Convert text report to PDF with improved formatting"""
     # Replace Unicode bullet points with compatible characters
     report_text = report_text.replace('•', '-')
+    
     pdf = FPDF()
     pdf.add_page()
     
     # Set up fonts
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(190, 10, "Smoking Cessation Report", 0, 1, 'C')
-    pdf.set_font("Arial", '', 12)
     
     # Add date
+    pdf.set_font("Arial", '', 14)
     pdf.cell(190, 10, f"Generated on: {datetime.now().strftime('%B %d, %Y')}", 0, 1, 'R')
-    pdf.ln(5)
     
-    # Add report content
-    pdf.set_font("Arial", '', 10)
-    # Split the report text into lines and add to PDF
-    for line in report_text.split('\n'):
-        # Check if line is a header (starts with ===)
-        if line.startswith('==='):
-            pdf.set_font("Arial", 'B', 12)
+    # Add report content with improved formatting
+    current_section = None
+    
+    # Split the report text into sections and process
+    sections = report_text.split('===')
+    
+    for section in sections:
+        if not section.strip():
+            continue
+            
+        # Process section title and content
+        lines = section.strip().split('\n')
+        if lines:
+            # Section heading
+            section_title = lines[0].strip()
+            pdf.set_font("Arial", 'B', 14)
             pdf.ln(5)
-            pdf.cell(190, 10, line.replace('=', '').strip(), 0, 1)
+            pdf.cell(190, 8, section_title.upper(), 0, 1, 'L')
+            pdf.ln(2)
+            
+            # Process content after the heading
             pdf.set_font("Arial", '', 10)
-        # Check if line is a subheader (starts with ---)
-        elif line.startswith('---'):
-            pdf.set_font("Arial", 'B', 11)
-            pdf.ln(3)
-            pdf.cell(190, 8, line.replace('-', '').strip(), 0, 1)
-            pdf.set_font("Arial", '', 10)
-        # Regular content line
-        elif line.strip():
-            # If line starts with bullet point
-            if line.strip().startswith('•'):
-                pdf.cell(10, 6, '', 0, 0)
-                pdf.multi_cell(180, 6, line.strip())
-            # If line starts with number followed by period (like "1.")
-            elif len(line.strip()) > 2 and line.strip()[0].isdigit() and line.strip()[1] == '.':
-                pdf.cell(10, 6, '', 0, 0)
-                pdf.multi_cell(180, 6, line.strip())
-            # Regular text
-            else:
-                pdf.multi_cell(190, 6, line.strip())
+            content_lines = lines[1:] if len(lines) > 1 else []
+            
+            for line in content_lines:
+                line = line.strip()
+                if not line:
+                    pdf.ln(2)
+                    continue
+                    
+                # Handle subsection titles (marked with ---)
+                if line.startswith('---'):
+                    subsection = line.replace('-', '').strip()
+                    pdf.set_font("Arial", 'B', 12)
+                    pdf.ln(3)
+                    pdf.cell(190, 6, subsection, 0, 1, 'L')
+                    pdf.set_font("Arial", '', 10)
+                    continue
+                
+                # Handle numbered points (like "1. Something")
+                if re.match(r'^\d+\.', line):
+                    pdf.set_font("Arial", 'B', 10)
+                    num_part = line.split('.')[0] + '.'
+                    text_part = '.'.join(line.split('.')[1:]).strip()
+                    
+                    pdf.cell(10, 6, num_part, 0, 0)
+                    pdf.set_font("Arial", '', 10)
+                    pdf.multi_cell(180, 6, text_part)
+                    continue
+                    
+                # Handle bullet points
+                if line.startswith('-') or line.startswith('•'):
+                    pdf.cell(10, 6, '-', 0, 0)
+                    pdf.multi_cell(180, 6, line[1:].strip())
+                    continue
+                    
+                # Handle "Why:" lines
+                if line.startswith('Why:'):
+                    pdf.cell(15, 6, 'Why:', 0, 0)
+                    pdf.set_font("Arial", 'I', 10)  # Italics for the explanation
+                    pdf.multi_cell(175, 6, line[4:].strip())
+                    pdf.set_font("Arial", '', 10)  # Back to normal font
+                    continue
+                    
+                # Regular text - handle user profile info
+                if ':' in line and len(line) < 50:  # Likely a profile field
+                    parts = line.split(':', 1)
+                    if len(parts) == 2:
+                        key, value = parts[0], parts[1]
+                        pdf.set_font("Arial", 'B', 10)
+                        pdf.cell(60, 6, key + ':', 0, 0)
+                        pdf.set_font("Arial", '', 10)
+                        pdf.multi_cell(130, 6, value.strip())
+                        continue
+                
+                # Default handling for regular text
+                pdf.multi_cell(190, 6, line)
     
     # Create in-memory file object
     pdf_buffer = io.BytesIO()
