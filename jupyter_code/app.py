@@ -126,6 +126,31 @@ def create_pdf_report(report_text, user_profile):
             pdf.set_font("Arial", '', 10)
             content_lines = lines[1:] if len(lines) > 1 else []
             
+            # For profile section, handle key-value pairs differently
+            if "YOUR PROFILE" in section_title.upper():
+                for line in content_lines:
+                    line = line.strip()
+                    if not line:
+                        pdf.ln(2)
+                        continue
+                    
+                    # Handle profile items (key: value)
+                    if ':' in line:
+                        parts = line.split(':', 1)
+                        if len(parts) == 2:
+                            key, value = parts[0].strip(), parts[1].strip()
+                            pdf.set_font("Arial", 'B', 10)
+                            pdf.cell(40, 6, key + ':', 0, 1)  # Force new line after key
+                            pdf.set_font("Arial", '', 10)
+                            pdf.cell(10, 0, "", 0, 0)  # Indent
+                            pdf.multi_cell(170, 6, value)
+                            pdf.ln(1)  # Space between items
+                        else:
+                            pdf.multi_cell(180, 6, line)
+                    else:
+                        pdf.multi_cell(180, 6, line)
+                continue
+            
             for line in content_lines:
                 line = line.strip()
                 if not line:
@@ -152,7 +177,7 @@ def create_pdf_report(report_text, user_profile):
                         # Add number with fixed width
                         pdf.cell(8, 6, num_part, 0, 0)
                         pdf.set_font("Arial", '', 10)
-                        # Use correct width calculation for the remaining text
+                        # Use multi_cell to ensure proper wrapping
                         pdf.multi_cell(172, 6, text_part)
                     else:
                         # Fallback if splitting fails
@@ -165,34 +190,42 @@ def create_pdf_report(report_text, user_profile):
                     pdf.multi_cell(172, 6, line[1:].strip())
                     continue
                     
-                # Handle "Why:" lines
+                # Handle "Why:" lines with proper indentation and text wrapping
                 if line.startswith('Why:'):
                     pdf.cell(15, 6, 'Why:', 0, 0)
                     pdf.set_font("Arial", 'I', 10)  # Italics for the explanation
                     pdf.multi_cell(165, 6, line[4:].strip())
                     pdf.set_font("Arial", '', 10)  # Back to normal font
                     continue
-                    
-                # Regular text - handle user profile info
-                if ':' in line and len(line) < 50:  # Likely a profile field
+                
+                # Handle lines with colons separately for better formatting, but only if they're shorter lines
+                if ':' in line and len(line) < 50:
                     parts = line.split(':', 1)
                     if len(parts) == 2:
-                        key, value = parts[0], parts[1]
+                        key, value = parts[0].strip(), parts[1].strip()
                         pdf.set_font("Arial", 'B', 10)
-                        pdf.cell(60, 6, key + ':', 0, 0)
+                        pdf.cell(60, 6, key + ':', 0, 1)  # Force new line after the key
                         pdf.set_font("Arial", '', 10)
-                        pdf.multi_cell(120, 6, value.strip())
+                        pdf.cell(10, 0, "", 0, 0)  # Indent
+                        pdf.multi_cell(170, 6, value)
                         continue
                 
-                # Default handling for regular text with proper width to prevent truncation
+                # Default handling for regular text
+                # Make sure we use multi_cell to handle text wrapping properly
                 pdf.multi_cell(180, 6, line)
+                
+                # Add a tiny bit of space after each paragraph
+                if len(line) > 30:  # Only for longer paragraphs
+                    pdf.ln(1)
     
     # Create in-memory file object
     pdf_buffer = io.BytesIO()
     
     # Fix: Handle different versions of FPDF - some return bytes, some return bytearray
     pdf_bytes = pdf.output(dest='S')
-    # No need to encode - just write the bytes directly
+    if not isinstance(pdf_bytes, bytes):
+        pdf_bytes = bytes(pdf_bytes)
+    
     pdf_buffer.write(pdf_bytes)
     pdf_buffer.seek(0)
     
