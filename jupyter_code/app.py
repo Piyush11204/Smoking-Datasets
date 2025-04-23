@@ -7,6 +7,7 @@ from datetime import datetime
 import io
 from fpdf import FPDF
 import traceback
+import re  # Add this import
 from smoking1 import SmokingCessationAdvisor  # Import the SmokingCessationAdvisor class
 
 # Initialize the advisor
@@ -82,103 +83,89 @@ def predict():
 
 def create_pdf_report(report_text, user_profile):
     """Convert text report to PDF with improved formatting"""
-    # Replace Unicode bullet points with compatible characters
-    report_text = report_text.replace('•', '-')
-    
     pdf = FPDF()
     pdf.add_page()
     
-    # Set up fonts
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(190, 10, "Smoking Cessation Report", 0, 1, 'C')
+    # Set default font
+    pdf.set_font("Arial", size=10)
+    
+    # Add title
+    pdf.set_font("Arial", 'B', 20)
+    pdf.cell(190, 15, "Smoking Cessation Report", 0, 1, 'C')
     
     # Add date
-    pdf.set_font("Arial", '', 14)
+    pdf.set_font("Arial", 'I', 12)
     pdf.cell(190, 10, f"Generated on: {datetime.now().strftime('%B %d, %Y')}", 0, 1, 'R')
+    pdf.ln(5)
     
-    # Add report content with improved formatting
-    current_section = None
-    
-    # Split the report text into sections and process
+    # Process the report content
     sections = report_text.split('===')
     
     for section in sections:
         if not section.strip():
             continue
             
-        # Process section title and content
         lines = section.strip().split('\n')
-        if lines:
-            # Section heading
-            section_title = lines[0].strip()
+        if not lines:
+            continue
+            
+        # Section heading
+        heading = lines[0].strip()
+        if heading:
             pdf.set_font("Arial", 'B', 14)
-            pdf.ln(5)
-            pdf.cell(190, 8, section_title.upper(), 0, 1, 'L')
+            pdf.set_fill_color(240, 240, 240)  # Light gray background
+            pdf.cell(190, 10, heading, 0, 1, 'L', True)
             pdf.ln(2)
+        
+        # Process content
+        pdf.set_font("Arial", '', 10)
+        for line in lines[1:]:
+            line = line.strip()
+            if not line:
+                pdf.ln(2)
+                continue
             
-            # Process content after the heading
-            pdf.set_font("Arial", '', 10)
-            content_lines = lines[1:] if len(lines) > 1 else []
+            # Subsection titles (marked with ---)
+            if line.startswith('---'):
+                subsection = line.replace('-', '').strip()
+                pdf.set_font("Arial", 'B', 12)
+                pdf.set_fill_color(245, 245, 245)
+                pdf.cell(190, 8, subsection, 0, 1, 'L', True)
+                pdf.set_font("Arial", '', 10)
+                continue
             
-            for line in content_lines:
-                line = line.strip()
-                if not line:
-                    pdf.ln(2)
-                    continue
-                    
-                # Handle subsection titles (marked with ---)
-                if line.startswith('---'):
-                    subsection = line.replace('-', '').strip()
-                    pdf.set_font("Arial", 'B', 12)
-                    pdf.ln(3)
-                    pdf.cell(190, 6, subsection, 0, 1, 'L')
-                    pdf.set_font("Arial", '', 10)
-                    continue
-                
-                # Handle numbered points (like "1. Something")
-                if re.match(r'^\d+\.', line):
+            # Numbered points
+            if re.match(r'^\d+\.', line):
+                parts = line.split('.', 1)
+                if len(parts) == 2:
                     pdf.set_font("Arial", 'B', 10)
-                    num_part = line.split('.')[0] + '.'
-                    text_part = '.'.join(line.split('.')[1:]).strip()
-                    
-                    pdf.cell(10, 6, num_part, 0, 0)
+                    pdf.cell(10, 6, parts[0] + '.', 0, 0)
                     pdf.set_font("Arial", '', 10)
-                    pdf.multi_cell(180, 6, text_part)
+                    pdf.multi_cell(180, 6, parts[1].strip())
+                continue
+            
+            # Bullet points
+            if line.startswith('•') or line.startswith('-'):
+                pdf.cell(10, 6, '•', 0, 0)
+                pdf.multi_cell(180, 6, line[1:].strip())
+                continue
+            
+            # Profile information
+            if ':' in line and len(line) < 50:
+                parts = line.split(':', 1)
+                if len(parts) == 2:
+                    pdf.set_font("Arial", 'B', 10)
+                    pdf.cell(50, 6, parts[0] + ':', 0, 0)
+                    pdf.set_font("Arial", '', 10)
+                    pdf.multi_cell(140, 6, parts[1].strip())
                     continue
-                    
-                # Handle bullet points
-                if line.startswith('-') or line.startswith('•'):
-                    pdf.cell(10, 6, '-', 0, 0)
-                    pdf.multi_cell(180, 6, line[1:].strip())
-                    continue
-                    
-                # Handle "Why:" lines
-                if line.startswith('Why:'):
-                    pdf.cell(15, 6, 'Why:', 0, 0)
-                    pdf.set_font("Arial", 'I', 10)  # Italics for the explanation
-                    pdf.multi_cell(175, 6, line[4:].strip())
-                    pdf.set_font("Arial", '', 10)  # Back to normal font
-                    continue
-                    
-                # Regular text - handle user profile info
-                if ':' in line and len(line) < 50:  # Likely a profile field
-                    parts = line.split(':', 1)
-                    if len(parts) == 2:
-                        key, value = parts[0], parts[1]
-                        pdf.set_font("Arial", 'B', 10)
-                        pdf.cell(60, 6, key + ':', 0, 0)
-                        pdf.set_font("Arial", '', 10)
-                        pdf.multi_cell(130, 6, value.strip())
-                        continue
-                
-                # Default handling for regular text
-                pdf.multi_cell(190, 6, line)
+            
+            # Regular text
+            pdf.multi_cell(190, 6, line)
     
-    # Create in-memory file object
+    # Create in-memory buffer
     pdf_buffer = io.BytesIO()
-    # Fix: Use pdf.output() with destination parameter 'S' to get PDF as bytes
-    pdf_bytes = pdf.output(dest='S')
-    # Write the bytes to the BytesIO object
+    pdf_bytes = pdf.output(dest='S').encode('latin1')  # Encode to handle special characters
     pdf_buffer.write(pdf_bytes)
     pdf_buffer.seek(0)
     
@@ -186,53 +173,43 @@ def create_pdf_report(report_text, user_profile):
 
 @app.route('/report', methods=['POST'])
 def generate_report_only():
-    """Generate report without saving to disk"""
     try:
         app.logger.info("Received report generation request")
         data = request.get_json(force=True)
         app.logger.info(f"Report request data: {data}")
         
-        # Same user profile creation as in predict
+        # Create user profile from input data
         user_profile = {
-            'Gender': data['gender'],
-            'Age': data['age'],
-            'Smoking Duration': data['years_smoking'],
-            'Cigarettes per day': data['cigarettes_per_day'],
-            'Previous Quit Attempts': data['previous_attempts'],
-            'Craving Level': data['craving_level'],
-            'Stress Level': data['stress_level'],
-            'Physical Activity': data['physical_activity'],
-            'Support System': data['support_system'],
-            'Nicotine Dependence Score': data['nicotine_Dependence'],
-            'Reason for Start Smoking': data['reason_for_starting'],
-            'Location': 'National (States and DC)',  # Default value
-            'Smoking Behavior': 'Cigarette Use (Youth)',  # Default value
-            'Smoking Percentage': min(data['cigarettes_per_day'] * 1.0, 100)  # Calculated field
+            'Gender': data.get('gender', 'Overall'),
+            'Age': data.get('age', 30),
+            'Smoking Duration': data.get('years_smoking', 0),
+            'Cigarettes per day': data.get('cigarettes_per_day', 0),
+            'Previous Quit Attempts': data.get('previous_attempts', 0),
+            'Craving Level': data.get('craving_level', 'Medium'),
+            'Stress Level': data.get('stress_level', 'Medium'),
+            'Physical Activity': data.get('physical_activity', 'Moderate'),
+            'Support System': data.get('support_system', 'None'),
+            'Nicotine Dependence Score': data.get('nicotine_Dependence', 0),
+            'Reason for Start Smoking': data.get('reason_for_starting', 'Other'),
+            'Location': 'National (States and DC)',
+            'Smoking Behavior': 'Cigarette Use (Youth)',
+            'Smoking Percentage': min(data.get('cigarettes_per_day', 0) * 1.0, 100)
         }
         
-        # Get recommendations
         recommendations = advisor.get_recommendations(user_profile)
-        
-        # Generate report based on type
         report_type = data.get('report_type', 'comprehensive')
-        app.logger.info(f"Generating {report_type} report")
         report_text = advisor.generate_report(user_profile, recommendations, report_type)
         
-        # Return as JSON if client prefers
         if data.get('format', 'pdf') == 'json':
             prediction = advisor.predict_quit_success(user_profile)
-            app.logger.info("Returning JSON report")
             return jsonify({
-                'report': report_text, 
+                'report': report_text,
                 'success_probability': float(prediction)
             })
         
-        # Otherwise return as PDF
-        app.logger.info("Creating PDF for report")
         pdf_file = create_pdf_report(report_text, user_profile)
-        app.logger.info("PDF created successfully")
+        filename = f"smoking_cessation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         
-        filename = f"smoking_cessation_report_{datetime.now().strftime('%Y%m%d')}.pdf"
         return send_file(
             pdf_file,
             mimetype='application/pdf',
@@ -243,7 +220,10 @@ def generate_report_only():
     except Exception as e:
         app.logger.error(f"Error in report generation: {str(e)}")
         app.logger.error(traceback.format_exc())
-        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+        return jsonify({
+            'error': str(e),
+            'traceback': traceback.format_exc()
+        }), 500
 
 # Add a dedicated endpoint just for testing PDF generation
 @app.route('/test-pdf', methods=['GET'])
